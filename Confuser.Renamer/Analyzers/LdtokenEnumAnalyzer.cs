@@ -61,16 +61,25 @@ namespace Confuser.Renamer.Analyzers {
 					if (typeDef != null)
 						service.AddReference(typeDef, new StringTypeReference(instr, typeDef));
 				}
-			}
-		}
+                if (instr.Operand is MemberRef memberRef)
+                {
+                    IMemberForwarded member = memberRef.Resolve();
+                    if (member != null && context.Modules.Contains((ModuleDefMD)member.Module))
+                    {
+                        // Do not obfuscate MemberRef. Dnlib can't handle these properly. (They used to appear as MethodDef, something changed in the compiler) 
+                        service.SetCanRename(member, false);
+                    }
+                }
+            }
+        }
 
 		public void PreRename(ConfuserContext context, INameService service, ProtectionParameters parameters, IDnlibDef def) {
-			//
-		}
+            //
+        }
 
-		public void PostRename(ConfuserContext context, INameService service, ProtectionParameters parameters, IDnlibDef def) {
-			//
-		}
+        public void PostRename(ConfuserContext context, INameService service, ProtectionParameters parameters, IDnlibDef def) {
+            //
+        }
 
 		void HandleEnum(ConfuserContext context, INameService service, MethodDef method, int index) {
 			var target = (IMethod)method.Body.Instructions[index].Operand;
